@@ -22,12 +22,12 @@ To set up Kind:
 
 1. Build the Docker image for the Flask application:
    ```
-   docker build -t flask_blog:latest .
+   docker build -t flask-blog:v1 .
    ```
 
 2. Load the image into the Kind cluster:
    ```
-   kind load docker-image flask_blog:latest --name flask-blog-cluster
+   kind load docker-image flask-blog:latest --name flask-blog-cluster
    ```
 
 ## 3. Deploying the Application
@@ -50,10 +50,9 @@ To set up Kind:
        spec:
          containers:
          - name: flask-blog
-           image: flask_blog:latest
-           imagePullPolicy: Never
+           image: flask-blog:v1
            ports:
-           - containerPort: 5009
+           - containerPort: 5000
    ---
    apiVersion: v1
    kind: Service
@@ -65,8 +64,8 @@ To set up Kind:
      ports:
        - protocol: TCP
          port: 80
-         targetPort: 5009
-     type: ClusterIP
+         targetPort: 5000
+     type: LoadBalancer
    ```
 
 2. Apply the deployment:
@@ -98,7 +97,7 @@ To set up Kind:
 
 ## 5. Accessing the Application
 
-Since we're using ClusterIP as the Service type, we need to use port-forwarding to access our application:
+Since we're using Kind, which doesn't provide built-in support for LoadBalancer services, we need to use port-forwarding to access our application:
 
 ```
 kubectl port-forward service/flask-blog-service 8080:80
