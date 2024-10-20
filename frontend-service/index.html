@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlaskBlog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 50%;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 1em;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5em;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        button {
+            padding: 0.5em 1em;
+        }
+        h2 {
+            margin-top: 2em;
+        }
+        .post {
+            border: 1px solid #ccc;
+            padding: 1em;
+            margin-bottom: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to FlaskBlog</h1>
+
+        <!-- Registration -->
+        <h2>Register</h2>
+        <div class="form-group">
+            <label for="register-username">Username</label>
+            <input type="text" id="register-username" placeholder="Enter your username">
+        </div>
+        <div class="form-group">
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" placeholder="Enter your password">
+        </div>
+        <button onclick="registerUser()">Register</button>
+        <p id="register-message"></p>
+
+        <!-- Login -->
+        <h2>Login</h2>
+        <div class="form-group">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" placeholder="Enter your username">
+        </div>
+        <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" placeholder="Enter your password">
+        </div>
+        <button onclick="loginUser()">Login</button>
+        <p id="login-message"></p>
+
+        <!-- Create a post -->
+        <h2>Create a Post</h2>
+        <div class="form-group">
+            <label for="post-title">Title</label>
+            <input type="text" id="post-title" placeholder="Enter post title">
+        </div>
+        <div class="form-group">
+            <label for="post-content">Content</label>
+            <textarea id="post-content" rows="5" placeholder="Enter post content"></textarea>
+        </div>
+        <button onclick="createPost()">Submit Post</button>
+        <p id="post-message"></p>
+
+        <!-- View Posts -->
+        <h2>Posts</h2>
+        <div id="posts"></div>
+    </div>
+
+    <script>
+        let token = '';
+
+        function registerUser() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+
+            fetch('http://localhost:8083/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('register-message').innerText = data.message || 'Registered successfully!';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function loginUser() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            fetch('http://localhost:8083/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                token = data.token;
+                document.getElementById('login-message').innerText = 'Logged in successfully!';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function createPost() {
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+
+            fetch('http://localhost:8084/posts', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ title, content, author_id: 2 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('post-message').innerText = 'Post created successfully!';
+                loadPosts(); // Refresh posts after creation
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function loadPosts() {
+            fetch('http://localhost:8084/posts')
+            .then(response => response.json())
+            .then(data => {
+                const postsDiv = document.getElementById('posts');
+                postsDiv.innerHTML = ''; // Clear existing posts
+                data.forEach(post => {
+                    postsDiv.innerHTML += `
+                        <div class="post">
+                            <h3>${post.title}</h3>
+                            <p>${post.content}</p>
+                            <small>Author ID: ${post.author_id}</small>
+                        </div>
+                    `;
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Load posts on page load
+        window.onload = loadPosts;
+    </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+version: '3'
+services:
+  auth-service:
+    build: ./auth_service
+    ports:
+      - "8083:8083"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+    volumes:
+      - ./auth_service:/app
+
+  post-service:
+    build: ./post_service
+    ports:
+      - "8084:8084"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+    volumes:
+      - ./post_service:/app
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./ui:/usr/share/nginx/html
+    depends_on:
+      - auth-service
+      - post-service
